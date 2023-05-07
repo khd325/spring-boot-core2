@@ -12,7 +12,7 @@ public class FieldLogTrace implements LogTrace{
     private static final String COMPLETE_PREFIX = "<--";
     private static final String EX_PREFIX = "<X-";
 
-    private TraceId traceIdHolder;
+    private TraceId traceIdHolder; //traceId 동기화
 
     @Override
     public TraceStatus begin(String message) {
