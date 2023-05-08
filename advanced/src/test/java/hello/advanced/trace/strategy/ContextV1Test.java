@@ -62,7 +62,7 @@ public class ContextV1Test {
         Strategy strategy2 = new Strategy() {
             @Override
             public void call() {
-                log.info("비즈니스 로직1 실행");
+                log.info("비즈니스 로직2 실행");
             }
         };
         ContextV1 contextV2 = new ContextV1(strategy2);
@@ -84,7 +84,7 @@ public class ContextV1Test {
         ContextV1 contextV2 = new ContextV1(new Strategy() {
             @Override
             public void call() {
-                log.info("비즈니스 로직1 실행");
+                log.info("비즈니스 로직2 실행");
             }
         });
         contextV2.execute();
@@ -97,7 +97,7 @@ public class ContextV1Test {
         ContextV1 contextV1 = new ContextV1(() -> log.info("비즈니스 로직1 실행"));
         contextV1.execute();
 
-        ContextV1 contextV2 = new ContextV1(() -> log.info("비즈니스 로직1 실행"));
+        ContextV1 contextV2 = new ContextV1(() -> log.info("비즈니스 로직2 실행"));
         contextV2.execute();
     }
 
