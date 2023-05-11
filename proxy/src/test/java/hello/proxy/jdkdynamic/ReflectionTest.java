@@ -30,8 +30,8 @@ public class ReflectionTest {
 
         Hello target = new Hello();
 
-        Method methodCallA = classHello.getMethod("callA");
-        Object result1 = methodCallA.invoke(target);
+        Method methodCallA = classHello.getMethod("callA"); //callA 의 메서드 정보
+        Object result1 = methodCallA.invoke(target); //target 인스턴스에 있는 callA 호출
         log.info("result1={}", result1);
 
         Method methodCallB = classHello.getMethod("callB");
