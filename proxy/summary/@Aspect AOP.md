@@ -58,7 +58,7 @@ public class LogTraceAspect {
 > 
 > `@Aspect`의 정보를 기반으로 포인트컷, 어드바이스, 어드바이저를 생성하고 보관하는 것을 담당한다.
 
-![image4](../image/img4.PNG)
+![image5](../image/img5.PNG)
 
 - 1.생성: 스프링 빈 객체를 생성 
 - 2.전달:  생성된 객체를 빈 저장소에 등록하기 전에 빈 후처리기에 도달
