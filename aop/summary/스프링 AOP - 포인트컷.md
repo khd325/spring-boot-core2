@@ -23,6 +23,9 @@
 execution(modifiers-pattern? ret-type-pattern declaring-type-pattern?namepattern(param-pattern) throws-pattern?)
 
 execution(접근제어자? 반환타입 선언타입?메서드이름(파라미터) 예외?)
+
+
+//public(modifiers-pattern?) java.lang.String(return-type-pattern) hello.aop.member.MemberServiceImpl(declaring-type-pattern?).hello(name-pattern)(java.lang.String (param-pattern))
 ```
 
 메서드 실행 조인 포인트 매칭
@@ -30,6 +33,8 @@ execution(접근제어자? 반환타입 선언타입?메서드이름(파라미�
 ?는 생략 가능
 
 '*' 같은 패턴을 지정할 수 있다.
+
+**반환 타입, 메서드 이름: 필수**
 
 ```java
 @Test
@@ -48,3 +53,61 @@ public void exactMatch(){
 - 메서드이름: hello
 - 파라미터: (String)
 - 예외?: 생략
+
+```java
+@Test
+public void allMatch(){
+        /*
+        public 생략
+        String: *
+        hello.aop.member.MemberServiceImpl (생략)
+        hello(): *
+        java.lang.String: (..)
+         */
+        pointcut.setExpression("execution(* *(..))");
+        assertThat(pointcut.matches(helloMethod,MemberServiceImpl.class)).isTrue();
+        }
+```
+
+### 파라미터 매칭
+
+```java
+@Test
+public void argsMatch(){
+        pointcut.setExpression("execution(* *(..))");
+        assertThat(pointcut.matches(helloMethod,MemberServiceImpl.class)).isTrue();
+}
+
+@Test
+public void argsMatchNoArgs(){
+        pointcut.setExpression("execution(* *())");
+        assertThat(pointcut.matches(helloMethod,MemberServiceImpl.class)).isFalse();
+}
+
+@Test
+public void argsMatchStar(){
+        pointcut.setExpression("execution(* *(*))");
+        assertThat(pointcut.matches(helloMethod,MemberServiceImpl.class)).isTrue();
+}
+
+@Test
+public void argsMatchAll(){
+        pointcut.setExpression("execution(* *(..))");
+        assertThat(pointcut.matches(helloMethod,MemberServiceImpl.class)).isTrue();
+}
+
+@Test
+public void argsMatchComplex(){
+        pointcut.setExpression("execution(* *(String, ..))");
+        assertThat(pointcut.matches(helloMethod,MemberServiceImpl.class)).isTrue();
+}
+```
+
+**execution 파라미터 매칭 규칙**
+
+- (String): 정확하게 String타입 
+- (): 파라미터 없음
+- (*): 정확히 하나의 파라미터, 타입 무관
+- (*, *): 정확히 두개의 파라미터, 타입 무관
+- (..): 파라미터 제한 없음. 모든 타입을 허용, 개수와 무관
+- (String, ...): String 타입으로 시작하고 개수와 무관한 모든 타입 허용
