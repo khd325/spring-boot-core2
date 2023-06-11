@@ -1,4 +1,4 @@
-package hello.aop.member.annotaticon;
+package hello.aop.member.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -116,3 +116,154 @@ public void argsMatchComplex(){
 
 특정 타입 내의 조인 포인트에 대한 매칭을 제한. 매칭되면 그 안의 메서드들이 자동으로 매칭된다.
 
+## args
+
+- `args`: 인자가 주어진 타입의 인스턴스인 조인 포인트로 매칭
+- 기본 문법은 `execution`의 `args` 부분과 같다.
+
+
+**execution과 args의 차이점**
+
+- execution은 파라미터 타입이 정확하게 매칭되어야 함. execution은 클래스에 선언된 정보를 기반으로 한다.
+- args는 부모 타입을 허용한다. (실제 넘어온 파라미터 객체 인스턴스를 보고 판단.)
+
+```java
+public class ArgsTest {
+
+    Method helloMethod;
+
+    @BeforeEach
+    public void init() throws NoSuchMethodException {
+        helloMethod = MemberServiceImpl.class.getMethod("hello", String.class);
+    }
+
+    private AspectJExpressionPointcut pointcut(String expression) {
+        AspectJExpressionPointcut pointcut = new AspectJExpressionPointcut();
+        pointcut.setExpression(expression);
+        return pointcut;
+    }
+
+    @Test
+    void args() {
+
+        assertThat(pointcut("args(String)")
+                .matches(helloMethod, MemberServiceImpl.class)).isTrue();
+
+        assertThat(pointcut("args(Object)")
+                .matches(helloMethod, MemberServiceImpl.class)).isTrue();
+
+        assertThat(pointcut("args()")
+                .matches(helloMethod, MemberServiceImpl.class)).isFalse();
+
+        assertThat(pointcut("args(..)")
+                .matches(helloMethod, MemberServiceImpl.class)).isTrue();
+
+        assertThat(pointcut("args(*)")
+                .matches(helloMethod, MemberServiceImpl.class)).isTrue();
+
+        assertThat(pointcut("args(String, ..)")
+                .matches(helloMethod, MemberServiceImpl.class)).isTrue();
+    }
+
+    @Test
+    void argsVsExecution() {
+
+        //Args
+        assertThat(pointcut("args(String)")
+                .matches(helloMethod, MemberServiceImpl.class)).isTrue();
+
+        assertThat(pointcut("args(java.io.Serializable)")
+                .matches(helloMethod, MemberServiceImpl.class)).isTrue();
+
+        assertThat(pointcut("args(Object)")
+                .matches(helloMethod, MemberServiceImpl.class)).isTrue();
+
+
+        //Execution
+        assertThat(pointcut("execution(* *(String))")
+                .matches(helloMethod, MemberServiceImpl.class)).isTrue();
+
+        assertThat(pointcut("execution(* *(java.io.Serializable))")
+                .matches(helloMethod, MemberServiceImpl.class)).isFalse();
+
+        assertThat(pointcut("execution(* *(Object))")
+                .matches(helloMethod, MemberServiceImpl.class)).isFalse();
+    }
+}
+```
+
+`void args()`: args는 상위 타입의 파라미터도 매칭에 성공한다.
+
+`void argsVsExecution()`: args와 비교했을 때 Execution은 Object, Serializable타입은 매칭에 실패하는 것을 볼 수 있다.
+
+
+## @target, @within
+
+- `@tartget`: 실행 객체의 클래스에 주어진 타입의 애노테이션이 있는 조인 포인트
+- `@within`: 주어진 애노테이션이 있는 타입 내 조인 포인트
+
+`@target(hello.aop.member.annotation.ClassAop)`
+`@within(hello.aop.member.annotation.ClassAop)`
+
+**차이**
+
+`@target`: 인스턴스의 모든 메서드를 조인 포인트로 적용
+`@within`: 해당 타입 내에 있는 메서드만 조인 포인트로 적용
+
+> `@target`은 부모 클래스의 메서드까지 어브다이스를 다 적용하고, `@within`은 자기 자신의 클래스에 정의된 메서드에만 어드바이스를 적용한다.
+
+
+![image2](../image/img2.PNG)
+
+## @annotation, @args
+
+`@annotation`: 메서드가 주어진 애노테이션을 가지고 있는 조인 포인트를 매칭
+
+
+
+```java
+@Slf4j
+@Import(AtAnnotationTest.AtAnnotationAspect.class)
+@SpringBootTest
+public class AtAnnotationTest {
+
+
+    @Autowired
+    MemberService memberService;
+
+    @Test
+    void success() {
+        log.info("memberService proxy={}", memberService.getClass());
+        memberService.hello("helloA");
+    }
+
+    @Slf4j
+    @Aspect
+    static class AtAnnotationAspect {
+
+        @Around("@annotation(hello.aop.member.annotation.MethodAop)")
+        public Object doAtAnnotation(ProceedingJoinPoint joinPoint) throws Throwable {
+            log.info("[@annotation] {}", joinPoint.getSignature());
+            return joinPoint.proceed();
+        }
+    }
+}
+```
+
+아래와 같이 MethodAop 애노테이션을 가지고 있는 조인 포인트를 매칭한다.
+
+```java
+@ClassAop
+@Component
+public class MemberServiceImpl implements MemberService {
+    @Override
+    @MethodAop("test value")
+    public String hello(String param) {
+        return "ok";
+    }
+}
+```
+
+`@args`: 전달된 실제 인수의 런타임 타입이 주어진 타입의 애노테이션을 갖는 조인 포인트
+
+
