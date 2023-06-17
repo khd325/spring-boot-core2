@@ -266,4 +266,138 @@ public class MemberServiceImpl implements MemberService {
 
 `@args`: 전달된 실제 인수의 런타임 타입이 주어진 타입의 애노테이션을 갖는 조인 포인트
 
+## bean
+
+빈의 이름으로 지정하는 스프링 전용 포인트컷 지시자.
+
+- 스프링 빈의 이름으로 AOP 적용 여부를 지정한다. 
+- `bean(orderService) || bean(*Repository)`
+- `*`같은 패턴도 사용 가능하다.
+
+```java
+@Slf4j
+@Import(BeanTest.BeanAspect.class)
+@SpringBootTest
+public class BeanTest {
+
+
+    @Autowired
+    OrderService orderService;
+
+    @Test
+    void success() {
+        orderService.orderItem("itemA");
+    }
+
+    @Aspect
+    static class BeanAspect {
+        @Around("bean(orderService) || bean(*Repository)")
+        public Object doLog(ProceedingJoinPoint joinPoint) throws Throwable {
+            log.info("[bean] {}", joinPoint.getSignature());
+            return joinPoint.proceed();
+        }
+    }
+}
+```
+
+
+## 매개변수 전달
+
+포인트컷 표현식을 사용해서 어드바이스에 매개변수를 전달할 수 있다.
+
+`this, target, args, @target, @within, @annotation, @args`
+
+
+```java
+// example
+
+@Before("allMember() && args(arg...)")
+public void logArgs3(String arg) {
+    log.info("[logArgs3] arg={}", arg);
+}
+```
+
+- 포인트컷의 이름과 매개변수의 이름을 맞추어야 한다. 
+- 타입이 메서드에 지정한 타입으로 제한된다. `String`으로 지정되어 있기 때문에 `args(arg...) -> args(String...)`
+
+```java
+@Slf4j
+@Import(ParameterTest.ParameterAspect.class)
+@SpringBootTest
+public class ParameterTest {
+
+    @Autowired
+    MemberService memberService;
+
+    @Test
+    public void success() {
+        log.info("memberService Proxy={}", memberService.getClass());
+        memberService.hello("helloA");
+    }
+
+    @Slf4j
+    @Aspect
+    static class ParameterAspect {
+
+        @Pointcut("execution(* hello.aop.member..*.*(..))")
+        private void allMember() {
+
+        }
+
+        @Around("allMember()")
+        public Object logArgs1(ProceedingJoinPoint joinPoint) throws Throwable {
+            Object arg1 = joinPoint.getArgs()[0];
+            log.info("[logArgs1]{}, arg={}", joinPoint.getSignature(), arg1);
+
+            return joinPoint.proceed();
+        }
+
+        @Around("allMember() && args(arg, ..)")
+        public Object logArgs1(ProceedingJoinPoint joinPoint, Object arg) throws Throwable {
+            log.info("[logArgs2]{}, arg={}", joinPoint.getSignature(), arg);
+
+            return joinPoint.proceed();
+        }
+
+        @Before("allMember() && args(arg, ..)")
+        public void logArgs3(String arg) {
+            log.info("[logArgs3] arg={}", arg);
+        }
+
+        @Before("allMember() && this(obj)")
+        public void thisArgs(JoinPoint joinPoint, MemberService obj) {
+            log.info("[this]{}, obj={}", joinPoint.getSignature(), obj.getClass());
+        }
+
+        @Before("allMember() && target(obj)")
+        public void targetArgs(JoinPoint joinPoint, MemberService obj) {
+            log.info("[target]{}, obj={}", joinPoint.getSignature(), obj.getClass());
+        }
+
+
+        @Before("allMember() && @target(annotation)")
+        public void atTarget(JoinPoint joinPoint, ClassAop annotation) {
+            log.info("[@target]{}, obj={}", joinPoint.getSignature(), annotation);
+        }
+
+        @Before("allMember() && @within(annotation)")
+        public void atWithin(JoinPoint joinPoint, ClassAop annotation) {
+            log.info("[@within]{}, obj={}", joinPoint.getSignature(), annotation);
+        }
+
+        @Before("allMember() && @annotation(annotation)")
+        public void atAnnotation(JoinPoint joinPoint, MethodAop annotation) {
+            log.info("[@annotation]{}, annotationValue={}", joinPoint.getSignature(), annotation.value());
+        }
+    }
+}
+```
+
+- `logArgs1`: joinPoint.getArgs()[0]과 같이 매개변수를 전달
+- `logArgs2`: args(arg, ..)
+- `logArgs3`: `@Before`를 사용한 축약 버전. 
+- `this`: 프록시 객체를 전달 받는다.
+- `target`: 실제 대상 객체를 전달받는다.
+- `@target`, `@within`: 타입의 애노테이션을 전달 받는다.
+- `@annotation`: 메서드의 애노테이션을 전달 받는다.
 
