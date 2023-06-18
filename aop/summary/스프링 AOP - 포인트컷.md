@@ -401,3 +401,17 @@ public class ParameterTest {
 - `@target`, `@within`: 타입의 애노테이션을 전달 받는다.
 - `@annotation`: 메서드의 애노테이션을 전달 받는다.
 
+## this, target
+
+- `this`: 스프링 빈 객체(스프링 AOP 프록시)를 대상으로 하는 조인 포인트
+- `target`: 프록시가 가르키는 실제 대상 target을 대상으로 하는 조인 포인트
+
+this, target은 적용 타입 하나를 정확하게 지정해야 한다.
+
+> this(hello.aop.member.MemberService)
+> target(hello.aop.member.MemberService)
+
+
+
+
+
