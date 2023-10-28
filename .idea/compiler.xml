@@ -11,5 +11,9 @@
         <module name="proxy.main" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="advanced" target="11" />
+      <module name="spring-boot-core2.advanced" target="11" />
+    </bytecodeTargetLevel>
   </component>
 </project>
